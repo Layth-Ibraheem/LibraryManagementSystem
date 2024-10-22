@@ -15,7 +15,7 @@ public class BorrowingController {
     private BorrowingService _borrowingService;
 
     @PostMapping("/borrow/{bookId}/patron/{patronId}")
-    public ResponseEntity<?> borrowBook(@PathVariable Integer bookId, @PathVariable Integer patronId) throws ResourceNotFoundException {
+    public ResponseEntity<?> borrowBook(@PathVariable(name = "bookId") Integer bookId, @PathVariable(name = "patronId") Integer patronId) throws ResourceNotFoundException {
         Borrowing borrowing = _borrowingService.borrowBook(patronId, bookId);
         if (borrowing == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("this patron has already borrowed this book");
@@ -24,7 +24,7 @@ public class BorrowingController {
     }
 
     @PutMapping("/return/{bookId}/patron/{patronId}")
-    public ResponseEntity<?> returnBook(@PathVariable Integer bookId, @PathVariable Integer patronId) {
+    public ResponseEntity<?> returnBook(@PathVariable(name = "bookId") Integer bookId, @PathVariable(name = "patronId") Integer patronId) {
         boolean isReturned = _borrowingService.returnBook(bookId, patronId);
         return isReturned ? ResponseEntity.status(HttpStatus.OK).body("book returned successfully") : ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body("Internal Server Error");
     }
