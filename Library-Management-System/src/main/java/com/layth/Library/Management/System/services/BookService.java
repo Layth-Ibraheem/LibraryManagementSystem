@@ -9,6 +9,7 @@ import com.layth.Library.Management.System.requestsAndResponses.books.UpdateBook
 import com.layth.Library.Management.System.utils.ISBNGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ public class BookService {
         return _repo.save(book);
     }
 
-    @CacheEvict(value = "books", key = "#bookId")
+    @CachePut(value = "books", key = "#bookId")
     public Book updateBook(Integer bookId, UpdateBookRequest request) throws ResourceNotFoundException {
         Optional<Book> optionalBook = _repo.findById(bookId);
         if (optionalBook.isPresent()) {
@@ -43,7 +44,7 @@ public class BookService {
             throw new ResourceNotFoundException("There is no book with id " + bookId);
         }
     }
-
+    @CachePut(value = "books", key = "#bookId")
     public Boolean deleteBook(Integer bookId) {
         Optional<Book> optionalBook = _repo.findById(bookId);
         if (optionalBook.isPresent()) {
@@ -53,7 +54,7 @@ public class BookService {
             return false;
         }
     }
-
+    @Cacheable(value = "books",key = "#bookId")
     public Book getBookById(Integer bookId) {
         Optional<Book> book = _repo.findById(bookId);
         return book.orElse(null);
