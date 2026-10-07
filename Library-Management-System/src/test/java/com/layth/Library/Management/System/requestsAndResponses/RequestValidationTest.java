@@ -1,5 +1,7 @@
 package com.layth.Library.Management.System.requestsAndResponses;
 
+import com.layth.Library.Management.System.requestsAndResponses.auth.LoginRequest;
+import com.layth.Library.Management.System.requestsAndResponses.auth.RegisterRequest;
 import com.layth.Library.Management.System.requestsAndResponses.books.AddNewBookRequest;
 import com.layth.Library.Management.System.requestsAndResponses.books.UpdateBookRequest;
 import com.layth.Library.Management.System.requestsAndResponses.librarians.AddNewLibrarianRequest;
@@ -79,6 +81,20 @@ class RequestValidationTest {
         assertThat(invalidFields(new AddNewPatronRequest("Ali", "ali@example.com", null))).containsExactly("phoneNumber");
         assertThat(invalidFields(new AddNewPatronRequest("Ali", "ali@example.com", "call me"))).containsExactly("phoneNumber");
         assertThat(invalidFields(new AddNewPatronRequest("Ali", "ali@example.com", "+963 991-234-567"))).isEmpty();
+    }
+
+    @Test
+    void passwordsAreLimitedTo72BytesNot72Characters() {
+        String e = "é"; // 2 bytes in UTF-8
+
+        assertThat(invalidFields(new RegisterRequest("ines", "x".repeat(72)))).isEmpty();
+        assertThat(invalidFields(new RegisterRequest("ines", "x".repeat(73)))).containsExactly("password");
+        assertThat(invalidFields(new RegisterRequest("ines", e.repeat(36)))).isEmpty();
+        assertThat(invalidFields(new RegisterRequest("ines", e.repeat(37)))).containsExactly("password");
+        assertThat(invalidFields(new RegisterRequest("ines", "x".repeat(7)))).containsExactly("password");
+
+        assertThat(invalidFields(new LoginRequest("ines", e.repeat(36)))).isEmpty();
+        assertThat(invalidFields(new LoginRequest("ines", e.repeat(36) + "x"))).containsExactly("password");
     }
 
     private static Set<String> invalidFields(Object request) {

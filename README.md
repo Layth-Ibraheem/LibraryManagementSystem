@@ -83,7 +83,9 @@ alter existing columns:
 ## Authentication and permissions
 
 1. `POST /api/auth/register` with `{"userName": "...", "password": "..."}` creates a user with
-   no permissions (`roles = 0`) and returns `201` with a token.
+   no permissions (`roles = 0`) and returns `201` with a token. A user name has 3 to 50
+   letters, digits, `.`, `_` or `-`. A password has at least 8 characters and at most 72 bytes
+   in UTF-8 (BCrypt's limit; a longer password is rejected, not silently cut off).
 2. `POST /api/auth/login` with the same body returns `200` with a token.
 3. Send the token on every other request: `Authorization: Bearer <token>`.
 

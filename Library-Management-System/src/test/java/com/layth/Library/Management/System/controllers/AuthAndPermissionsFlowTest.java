@@ -188,6 +188,20 @@ class AuthAndPermissionsFlowTest {
         register("carol", "carol-password-2", "").andExpect(status().isConflict());
     }
 
+    @Test
+    void passwordsLongerThan72BytesAreRejectedInsteadOfTruncatedByBCrypt() throws Exception {
+        String seventyTwoBytes = "é".repeat(36); // 36 characters, 2 bytes each in UTF-8
+
+        register("utf8-ines", "é".repeat(72), "")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.password").value("must be at most 72 bytes in UTF-8"));
+
+        register("utf8-ines", seventyTwoBytes, "").andExpect(status().isCreated());
+        login("utf8-ines", seventyTwoBytes).andExpect(status().isOk());
+        // Same first 72 bytes, different password: BCrypt alone would accept it.
+        login("utf8-ines", seventyTwoBytes + "x".repeat(10)).andExpect(status().isBadRequest());
+    }
+
     private ResultActions register(String userName, String password, String extraJson) throws Exception {
         return mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)

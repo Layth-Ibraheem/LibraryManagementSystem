@@ -1,5 +1,6 @@
 package com.layth.Library.Management.System.requestsAndResponses.auth;
 
+import com.layth.Library.Management.System.utils.validation.MaxUtf8Bytes;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -14,9 +15,11 @@ public class RegisterRequest {
     @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "User name may contain only letters, digits, '.', '_' and '-'")
     private String userName;
 
-    // BCrypt ignores everything after 72 bytes, so longer passwords are rejected instead of silently truncated.
+    // BCrypt ignores everything after 72 bytes, so longer passwords are rejected instead of silently
+    // truncated. The limit is in UTF-8 bytes, not characters: 'é' counts twice.
     @NotBlank(message = "Password is required")
-    @Size(min = 8, max = 72)
+    @Size(min = 8)
+    @MaxUtf8Bytes(72)
     private String password;
 
     public RegisterRequest() {

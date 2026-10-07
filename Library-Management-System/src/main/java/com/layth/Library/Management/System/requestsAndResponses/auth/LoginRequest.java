@@ -1,5 +1,6 @@
 package com.layth.Library.Management.System.requestsAndResponses.auth;
 
+import com.layth.Library.Management.System.utils.validation.MaxUtf8Bytes;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -8,8 +9,10 @@ public class LoginRequest {
     @Size(max = 50)
     private String userName;
 
+    // Same byte limit as on register: no stored password is longer, and BCrypt would compare
+    // only the first 72 bytes of a longer one.
     @NotBlank(message = "Password is required")
-    @Size(max = 72)
+    @MaxUtf8Bytes(72)
     private String password;
 
     public LoginRequest() {
