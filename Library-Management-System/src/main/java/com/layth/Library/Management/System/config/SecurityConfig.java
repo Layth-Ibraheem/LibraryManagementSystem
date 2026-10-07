@@ -21,9 +21,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtRequestFilter jwtRequestFilter;
+    private final SecurityProblemHandler securityProblemHandler;
 
-    public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
+    public SecurityConfig(JwtRequestFilter jwtRequestFilter, SecurityProblemHandler securityProblemHandler) {
         this.jwtRequestFilter = jwtRequestFilter;
+        this.securityProblemHandler = securityProblemHandler;
     }
 
     @Bean
@@ -36,8 +38,15 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        // Spring Boot's error page: when a servlet error is forwarded here, its real
+                        // status must reach the client instead of being masked by a 401.
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
+                // 401 for a missing or rejected token, 403 for a URL-level denial; both as problem details.
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(securityProblemHandler)
+                        .accessDeniedHandler(securityProblemHandler))
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

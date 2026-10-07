@@ -151,7 +151,7 @@ class AuthAndPermissionsFlowTest {
     @Test
     void rejectedRequestsDoNotCreateAnHttpSession() throws Exception {
         MvcResult rejected = mockMvc.perform(get("/api/books"))
-                .andExpect(status().is4xxClientError())
+                .andExpect(status().isUnauthorized())
                 .andReturn();
 
         assertNull(rejected.getRequest().getSession(false), "a stateless token API must not create HTTP sessions");
