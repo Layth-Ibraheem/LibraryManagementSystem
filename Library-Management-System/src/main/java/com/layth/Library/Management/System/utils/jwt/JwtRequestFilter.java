@@ -1,46 +1,47 @@
 package com.layth.Library.Management.System.utils.jwt;
 
-import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
+
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
-    private final JwtTokenUtils jwtTokenUtils;
+    // Login and register never read the token, so a stale or broken one in the header must not block them.
+    private static final RequestMatcher AUTH_ENDPOINTS = new AntPathRequestMatcher("/api/auth/**");
+
     private final CurrentUserProvider currentUserProvider;
-    public JwtRequestFilter(JwtTokenUtils jwtTokenUtil, CurrentUserProvider currentUserProvider) {
-        this.jwtTokenUtils = jwtTokenUtil;
+
+    public JwtRequestFilter(CurrentUserProvider currentUserProvider) {
         this.currentUserProvider = currentUserProvider;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, java.io.IOException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return AUTH_ENDPOINTS.matches(request);
+    }
 
-        // Allow anonymous access to login and register endpoints
-        String requestURI = request.getRequestURI();
-        if (requestURI.equals("/login") || requestURI.equals("/register")) {
-            chain.doFilter(request, response); // Skip JWT authentication for these endpoints
-            return;
-        }
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         final String authorizationHeader = request.getHeader("Authorization");
 
-        String jwt = null;
-        if(authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
-            jwt = authorizationHeader.substring(7);
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String jwt = authorizationHeader.substring(7);
             CurrentUser currentUser = currentUserProvider.getCurrentUser(jwt);
 
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(currentUser,null,null);
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(currentUser, null, null);
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
-        chain.doFilter(request,response);
+        chain.doFilter(request, response);
     }
 }

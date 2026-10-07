@@ -164,6 +164,15 @@ class AuthAndPermissionsFlowTest {
     }
 
     @Test
+    void loginIgnoresABrokenTokenLeftInTheAuthorizationHeader() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .header("Authorization", "Bearer not-a-valid-jwt")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userName\": \"admin\", \"password\": \"%s\"}".formatted(adminPassword)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void loginRejectsWrongPassword() throws Exception {
         login("admin", "not-the-password").andExpect(status().isUnauthorized());
     }
