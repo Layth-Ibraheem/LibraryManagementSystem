@@ -83,7 +83,7 @@ class LibraryApiFlowTest {
             User creator = userRepository.save(new User(null, "creator-" + SEQUENCE.incrementAndGet(),
                     "not-a-real-hash", UserRoles.ManageBooks.getRole()));
             bookRepository.save(new Book(null, "Book by creator " + i, "Some Author", 2001,
-                    "isbn-" + SEQUENCE.incrementAndGet(), LocalDate.now(), creator, false));
+                    nextIsbn(), LocalDate.now(), creator, false));
         }
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
@@ -210,6 +210,18 @@ class LibraryApiFlowTest {
     }
 
     @Test
+    void theIsbnComesFromTheClientIsValidatedAndIsUnique() throws Exception {
+        addBook("978-0-441-17271-9").andExpect(status().isCreated())
+                .andExpect(jsonPath("$.isbn").value("9780441172719"));
+
+        addBook("9780441172719").andExpect(status().isConflict());
+        addBook("978-0-441-17271-8").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
+        addBook("978O441172719").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
+        addBook("0-441-17271-7").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
+        addBook("").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
+    }
+
+    @Test
     void cacheUpdatesRunOutsideTheTransaction() {
         int cacheOrder = context.getBean(BeanFactoryCacheOperationSourceAdvisor.class).getOrder();
         int transactionOrder = context.getBean(BeanFactoryTransactionAttributeSourceAdvisor.class).getOrder();
@@ -222,8 +234,27 @@ class LibraryApiFlowTest {
         return body(mockMvc.perform(post("/api/books")
                         .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\": \"%s\", \"author\": \"Some Author\", \"publicationYear\": 2001}".formatted(title)))
+                        .content("{\"title\": \"%s\", \"author\": \"Some Author\", \"publicationYear\": 2001, \"isbn\": \"%s\"}"
+                                .formatted(title, nextIsbn())))
                 .andExpect(status().isCreated())).get("id").asInt();
+    }
+
+    /** A valid, unused ISBN-13: 978 + a 9-digit sequence number + the computed check digit. */
+    private static String nextIsbn() {
+        String first12 = "978" + "%09d".formatted(SEQUENCE.incrementAndGet());
+        int sum = 0;
+        for (int i = 0; i < 12; i++) {
+            sum += (first12.charAt(i) - '0') * (i % 2 == 0 ? 1 : 3);
+        }
+        return first12 + (10 - sum % 10) % 10;
+    }
+
+    private ResultActions addBook(String isbn) throws Exception {
+        return mockMvc.perform(post("/api/books")
+                .header("Authorization", adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\": \"Dune: Deluxe Edition\", \"author\": \"Frank Herbert\", \"publicationYear\": 1965, \"isbn\": \"%s\"}"
+                        .formatted(isbn)));
     }
 
     private int createPatron(String name) throws Exception {

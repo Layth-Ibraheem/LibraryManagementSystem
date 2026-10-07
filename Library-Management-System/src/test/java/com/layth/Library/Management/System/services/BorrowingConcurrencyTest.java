@@ -50,7 +50,7 @@ class BorrowingConcurrencyTest {
     void aSecondBorrowWaitsForTheFirstToCommitAndThenGetsAConflict() throws Exception {
         User admin = userRepository.findByUserName("admin").orElseThrow();
         Book book = bookRepository.save(new Book(null, "Java Concurrency in Practice", "Brian Goetz", 2006,
-                "isbn-race-1", LocalDate.now(), admin, false));
+                "9780321349606", LocalDate.now(), admin, false));
         Patron first = patronsRepository.save(new Patron(null, "First Patron", "first@example.com", "0991111111"));
         Patron second = patronsRepository.save(new Patron(null, "Second Patron", "second@example.com", "0992222222"));
 

@@ -21,8 +21,8 @@ public class Book {
     @Column(nullable = false)
 
     private Integer publicationYear;
-    @Column(nullable = false, length = 15)
-
+    // ISBN-13 stored as 13 digits without hyphens, so each book can be stored only once.
+    @Column(nullable = false, unique = true, length = 13)
     private String isbn;
     @Column(nullable = false)
 

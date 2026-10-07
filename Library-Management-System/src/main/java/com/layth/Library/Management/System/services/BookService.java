@@ -8,7 +8,6 @@ import com.layth.Library.Management.System.repositories.UserRepository;
 import com.layth.Library.Management.System.requestsAndResponses.books.AddNewBookRequest;
 import com.layth.Library.Management.System.requestsAndResponses.books.BookResponse;
 import com.layth.Library.Management.System.requestsAndResponses.books.UpdateBookRequest;
-import com.layth.Library.Management.System.utils.ISBNGenerator;
 import com.layth.Library.Management.System.utils.exceptions.ConflictException;
 import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import org.springframework.cache.annotation.CacheEvict;
@@ -45,10 +44,19 @@ public class BookService {
         return bookRepository.findAll().stream().map(BookResponse::from).toList();
     }
 
+    /**
+     * Adds a book with the ISBN the client sent, stored without hyphens.
+     *
+     * @throws ConflictException if a book with the same ISBN already exists
+     */
     @Transactional
     public BookResponse addNewBook(AddNewBookRequest request, Integer addedByUserId) {
+        String isbn = normalizeIsbn(request.getIsbn());
+        if (bookRepository.existsByIsbn(isbn)) {
+            throw new ConflictException("A book with ISBN " + isbn + " already exists");
+        }
         User addedBy = userRepository.getReferenceById(addedByUserId);
-        Book book = new Book(null, request.getTitle(), request.getAuthor(), request.getPublicationYear(), ISBNGenerator.GenerateISBN(),
+        Book book = new Book(null, request.getTitle(), request.getAuthor(), request.getPublicationYear(), isbn,
                 LocalDate.now(), addedBy, false);
         return BookResponse.from(bookRepository.save(book));
     }
@@ -83,6 +91,11 @@ public class BookService {
     @Transactional(readOnly = true)
     public BookResponse getBookById(Integer bookId) {
         return BookResponse.from(findBook(bookId));
+    }
+
+    /** 978-0-441-17271-9 and 9780441172719 are the same ISBN. */
+    static String normalizeIsbn(String isbn) {
+        return isbn.replace("-", "");
     }
 
     private Book findBook(Integer bookId) {

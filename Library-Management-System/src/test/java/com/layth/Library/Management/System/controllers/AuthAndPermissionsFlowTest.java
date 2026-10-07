@@ -125,7 +125,7 @@ class AuthAndPermissionsFlowTest {
         int bookId = body(mockMvc.perform(post("/api/books")
                         .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\": \"Domain-Driven Design\", \"author\": \"Eric Evans\", \"publicationYear\": 2003}"))
+                        .content("{\"title\": \"Domain-Driven Design\", \"author\": \"Eric Evans\", \"publicationYear\": 2003, \"isbn\": \"978-0-321-12521-7\"}"))
                 .andExpect(status().isCreated())).get("id").asInt();
         int patronId = body(mockMvc.perform(post("/api/patrons")
                         .header("Authorization", clerkToken)

@@ -18,4 +18,6 @@ public interface BookRepository extends JpaRepository<Book,Integer> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM Book b WHERE b.id = :id")
     Optional<Book> findByIdForUpdate(@Param("id") Integer id);
+
+    boolean existsByIsbn(String isbn);
 }

@@ -3,7 +3,9 @@ package com.layth.Library.Management.System.requestsAndResponses.books;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.ISBN;
 
 import java.time.LocalDate;
 import java.time.Year;
@@ -20,10 +22,21 @@ public class AddNewBookRequest {
     @Min(1450)
     private Integer publicationYear;
 
-    public AddNewBookRequest(String title, String author, Integer publicationYear) {
+    /**
+     * ISBN-13, either as 13 digits or with hyphens between groups (978-0-441-17271-9).
+     * @ISBN checks the length and the check digit but ignores any other character, so
+     * @Pattern limits the input to digits and single hyphens.
+     */
+    @NotBlank(message = "ISBN is required")
+    @Pattern(regexp = "\\d+(-\\d+)*", message = "must contain only digits, optionally separated by single hyphens")
+    @ISBN(type = ISBN.Type.ISBN_13)
+    private String isbn;
+
+    public AddNewBookRequest(String title, String author, Integer publicationYear, String isbn) {
         this.title = title;
         this.author = author;
         this.publicationYear = publicationYear;
+        this.isbn = isbn;
     }
 
     public AddNewBookRequest() {
@@ -54,5 +67,13 @@ public class AddNewBookRequest {
 
     public void setPublicationYear(Integer publicationYear) {
         this.publicationYear = publicationYear;
+    }
+
+    public String getIsbn() {
+        return isbn;
+    }
+
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
     }
 }
