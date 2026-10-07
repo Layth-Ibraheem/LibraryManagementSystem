@@ -63,8 +63,10 @@ export JWT_SECRET='<at least 32 random characters, for example from: openssl ran
 ```
 
 PowerShell: `$env:SPRING_PROFILES_ACTIVE='sqlserver'` and so on for each variable.
-`SPRING_DATASOURCE_URL` overrides the connection URL. The token lifetime is `jwt.expiration`
-(default `10h`).
+`SPRING_DATASOURCE_URL` overrides the connection URL. Always set `SPRING_PROFILES_ACTIVE`
+together with it: the default `h2` profile refuses to start on anything but an in-memory H2
+database, so its public dev key and dev users never reach a real database. The token lifetime
+is `jwt.expiration` (default `10h`).
 
 Hibernate creates and updates the tables (`ddl-auto=update`); there are no migration scripts.
 No users are created on SQL Server: register one, then make it an administrator once in SQL:
