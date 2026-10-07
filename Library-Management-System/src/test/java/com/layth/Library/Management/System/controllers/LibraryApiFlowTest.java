@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -219,6 +220,42 @@ class LibraryApiFlowTest {
         addBook("978O441172719").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
         addBook("0-441-17271-7").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
         addBook("").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
+    }
+
+    @Test
+    void unknownIdsAreNotFoundWithAMessageNamingTheRightResource() throws Exception {
+        mockMvc.perform(get("/api/books/{id}", 999_999).header("Authorization", adminToken))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("There is no book with id 999999"));
+        mockMvc.perform(get("/api/librarians/{id}", 999_999).header("Authorization", adminToken))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("There is no librarian with id 999999"));
+        mockMvc.perform(get("/api/patrons/{id}", 999_999).header("Authorization", adminToken))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("There is no patron with id 999999"));
+        mockMvc.perform(put("/api/librarians/{id}", 999_999)
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\": \"Ali\", \"lastName\": \"Lee\"}"))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/librarians/{id}", 999_999).header("Authorization", adminToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void creatingALibrarianReturnsItsLocationAndNoEntityInternals() throws Exception {
+        String location = mockMvc.perform(post("/api/librarians")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\": \"Ali\", \"lastName\": \"Lee\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.firstName").value("Ali"))
+                .andReturn().getResponse().getHeader("Location");
+
+        assertThat(location).matches("http://localhost/api/librarians/\\d+");
+        mockMvc.perform(get(location).header("Authorization", adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lastName").value("Lee"));
     }
 
     @Test

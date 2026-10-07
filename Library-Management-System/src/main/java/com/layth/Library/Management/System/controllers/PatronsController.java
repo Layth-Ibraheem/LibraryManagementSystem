@@ -8,11 +8,11 @@ import com.layth.Library.Management.System.requestsAndResponses.patrons.UpdatePa
 import com.layth.Library.Management.System.services.PatronService;
 import com.layth.Library.Management.System.utils.annotations.RequireRole;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.ArrayList;
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -26,56 +26,39 @@ public class PatronsController {
 
     @GetMapping("/{id}")
     @RequireRole(role = UserRoles.ManagePatrons)
-    public ResponseEntity<?> getById(@PathVariable(name = "id") Integer id) {
-        Patron patron = patronService.getPatronById(id);
-        if (patron == null) {
-            return new ResponseEntity<>("There is no patron with such id", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(MapToPatronResponse(patron), HttpStatus.OK);
+    public ResponseEntity<PatronResponse> getById(@PathVariable(name = "id") Integer id) {
+        return ResponseEntity.ok(toResponse(patronService.getPatronById(id)));
     }
 
     @GetMapping
     @RequireRole(role = UserRoles.ManagePatrons)
-    public ResponseEntity<?> getAllPatrons() {
-        List<Patron> patrons = patronService.getAllPatrons();
-        List<PatronResponse> patronResponses = new ArrayList<>();
-
-        for (Patron patron : patrons) {
-            patronResponses.add(MapToPatronResponse(patron));
-        }
-        return new ResponseEntity<>(patronResponses, HttpStatus.OK);
+    public ResponseEntity<List<PatronResponse>> getAllPatrons() {
+        return ResponseEntity.ok(patronService.getAllPatrons().stream().map(PatronsController::toResponse).toList());
     }
 
     @PostMapping
     @RequireRole(role = UserRoles.ManagePatrons)
-    public ResponseEntity<?> addNewPatron(@Valid @RequestBody AddNewPatronRequest request) {
+    public ResponseEntity<PatronResponse> addNewPatron(@Valid @RequestBody AddNewPatronRequest request) {
         Patron addedPatron = patronService.addNewPatron(request);
-        if (addedPatron.getId() == null) {
-            return new ResponseEntity<>("Error happened, could not add the book", HttpStatus.FAILED_DEPENDENCY);
-        } else {
-            return new ResponseEntity<>(MapToPatronResponse(addedPatron), HttpStatus.CREATED);
-        }
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(addedPatron.getId()).toUri();
+        return ResponseEntity.created(location).body(toResponse(addedPatron));
     }
 
     @PutMapping("/{id}")
     @RequireRole(role = UserRoles.ManagePatrons)
-    public ResponseEntity<?> updatePatron(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdatePatronRequest request) {
-        Patron updatedPatron = patronService.updatePatron(id, request);
-        if (updatedPatron != null) {
-            return new ResponseEntity<>(MapToPatronResponse(updatedPatron), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("There is no patron with such id", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<PatronResponse> updatePatron(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdatePatronRequest request) {
+        return ResponseEntity.ok(toResponse(patronService.updatePatron(id, request)));
     }
 
     @DeleteMapping("/{id}")
     @RequireRole(role = UserRoles.ManagePatrons)
-    public ResponseEntity<?> deletePatron(@PathVariable(name = "id") Integer id) {
+    public ResponseEntity<Void> deletePatron(@PathVariable(name = "id") Integer id) {
         patronService.deletePatron(id);
         return ResponseEntity.noContent().build();
     }
 
-    private static PatronResponse MapToPatronResponse(Patron patron) {
+    private static PatronResponse toResponse(Patron patron) {
         return new PatronResponse(patron.getId(), patron.getName(), patron.getEmail(), patron.getPhoneNumber());
     }
 }

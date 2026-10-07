@@ -8,11 +8,11 @@ import com.layth.Library.Management.System.requestsAndResponses.librarians.Updat
 import com.layth.Library.Management.System.services.LibrarianService;
 import com.layth.Library.Management.System.utils.annotations.RequireRole;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.util.ArrayList;
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -26,56 +26,39 @@ public class LibrarianController {
 
     @PostMapping
     @RequireRole(role = UserRoles.ManageLibrarians)
-    public ResponseEntity<?> createLibrarian(@Valid @RequestBody AddNewLibrarianRequest request) {
+    public ResponseEntity<LibrarianResponse> createLibrarian(@Valid @RequestBody AddNewLibrarianRequest request) {
         Librarian addedLibrarian = librarianService.addNewLibrarian(request);
-        if (addedLibrarian.getId() == null) {
-            return new ResponseEntity<>("Error happened, could not add the librarian", HttpStatus.FAILED_DEPENDENCY);
-        }
-        return new ResponseEntity<>(addedLibrarian, HttpStatus.CREATED);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(addedLibrarian.getId()).toUri();
+        return ResponseEntity.created(location).body(toResponse(addedLibrarian));
     }
 
     @GetMapping("/{id}")
     @RequireRole(role = UserRoles.ManageLibrarians)
-    public ResponseEntity<?> getLibrarian(@PathVariable(name = "id") Integer id) {
-        Librarian librarian = librarianService.getById(id);
-        if (librarian != null) {
-            return new ResponseEntity<>(MapToLibrarianResponse(librarian), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("No book with such id", HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<LibrarianResponse> getLibrarian(@PathVariable(name = "id") Integer id) {
+        return ResponseEntity.ok(toResponse(librarianService.getById(id)));
     }
 
     @GetMapping
     @RequireRole(role = UserRoles.ManageLibrarians)
-    public ResponseEntity<?> getAllLibrarians() {
-        List<Librarian> librarians = librarianService.getAllLibrarians();
-        List<LibrarianResponse> librarianResponses = new ArrayList<>();
-        for (Librarian librarian : librarians) {
-            librarianResponses.add(MapToLibrarianResponse(librarian));
-        }
-
-        return new ResponseEntity<>(librarianResponses, HttpStatus.OK);
+    public ResponseEntity<List<LibrarianResponse>> getAllLibrarians() {
+        return ResponseEntity.ok(librarianService.getAllLibrarians().stream().map(LibrarianController::toResponse).toList());
     }
 
     @DeleteMapping("/{id}")
     @RequireRole(role = UserRoles.ManageLibrarians)
     public ResponseEntity<Void> deleteLibrarian(@PathVariable(name = "id") Integer id) {
-        boolean isDeleted = librarianService.deleteLibrarian(id);
-        return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        librarianService.deleteLibrarian(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
     @RequireRole(role = UserRoles.ManageLibrarians)
-    public ResponseEntity<?> updateLibrarian(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdateLibrarianRequest request) {
-        Librarian updatedLibrarian = librarianService.updateLibrarian(id, request);
-        if (updatedLibrarian != null) {
-            return new ResponseEntity<>(MapToLibrarianResponse(updatedLibrarian), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Internal Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<LibrarianResponse> updateLibrarian(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdateLibrarianRequest request) {
+        return ResponseEntity.ok(toResponse(librarianService.updateLibrarian(id, request)));
     }
 
-    private static LibrarianResponse MapToLibrarianResponse(Librarian librarian) {
+    private static LibrarianResponse toResponse(Librarian librarian) {
         return new LibrarianResponse(librarian.getId(), librarian.getFirstName(), librarian.getLastName());
     }
 }

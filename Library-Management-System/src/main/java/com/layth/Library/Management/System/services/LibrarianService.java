@@ -1,14 +1,14 @@
 package com.layth.Library.Management.System.services;
 
-import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import com.layth.Library.Management.System.entities.Librarian;
 import com.layth.Library.Management.System.repositories.LibrarianRepository;
 import com.layth.Library.Management.System.requestsAndResponses.librarians.AddNewLibrarianRequest;
 import com.layth.Library.Management.System.requestsAndResponses.librarians.UpdateLibrarianRequest;
+import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class LibrarianService {
@@ -18,40 +18,37 @@ public class LibrarianService {
         this.librarianRepository = librarianRepository;
     }
 
-    public List<Librarian> getAllLibrarians(){
+    public List<Librarian> getAllLibrarians() {
         return librarianRepository.findAll();
     }
 
-    public Librarian addNewLibrarian(AddNewLibrarianRequest request){
-        Librarian librarian = new Librarian(null,request.getFirstName(),request.getLastName());
+    public Librarian addNewLibrarian(AddNewLibrarianRequest request) {
+        Librarian librarian = new Librarian(null, request.getFirstName(), request.getLastName());
         return librarianRepository.save(librarian);
     }
+
+    /** @throws ResourceNotFoundException if there is no librarian with this id */
+    @Transactional
     public Librarian updateLibrarian(Integer id, UpdateLibrarianRequest request) {
-        Optional<Librarian> optionalLibrarian = librarianRepository.findById(id);
-        if(optionalLibrarian.isPresent()){
-            Librarian librarian = optionalLibrarian.get();
-            librarian.setFirstName(request.getFirstName());
-            librarian.setLastName(request.getLastName());
-            return librarianRepository.save(librarian);
-        } else {
-            throw new ResourceNotFoundException("There is no such librarian with id: " + id);
-        }
+        Librarian librarian = findLibrarian(id);
+        librarian.setFirstName(request.getFirstName());
+        librarian.setLastName(request.getLastName());
+        return librarian; // managed entity: dirty checking writes the changes at commit
     }
 
-    public boolean deleteLibrarian(Integer id) {
-        Optional<Librarian> librarian = librarianRepository.findById(id);
-
-        if (librarian.isPresent()) {
-            librarianRepository.deleteById(id);
-            return true;
-        } else {
-            return false;
-        }
+    /** @throws ResourceNotFoundException if there is no librarian with this id */
+    @Transactional
+    public void deleteLibrarian(Integer id) {
+        librarianRepository.delete(findLibrarian(id));
     }
 
-    public Librarian getById(Integer id){
-        Optional<Librarian> librarian = librarianRepository.findById(id);
-        return librarian.orElse(null);
+    /** @throws ResourceNotFoundException if there is no librarian with this id */
+    public Librarian getById(Integer id) {
+        return findLibrarian(id);
     }
 
+    private Librarian findLibrarian(Integer id) {
+        return librarianRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("There is no librarian with id " + id));
+    }
 }
