@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+# The job only checks out the code and runs the tests, so the token needs read access only.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
