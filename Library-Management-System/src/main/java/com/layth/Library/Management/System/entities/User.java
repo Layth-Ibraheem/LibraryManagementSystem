@@ -13,7 +13,8 @@ public class User {
     private Integer id;
     @Column(nullable = false,unique = true)
     private String userName;
-    @Column(nullable = false,length = 50)
+    // Holds a BCrypt hash (60 characters), never the raw password.
+    @Column(nullable = false, length = 100)
     private String password;
     @Column(nullable = false)
     private Integer roles;

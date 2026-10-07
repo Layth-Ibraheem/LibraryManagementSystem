@@ -37,11 +37,11 @@ public class AuthenticationController {
 
     @GetMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        User user = userService.getByUserNameAndPassword(request.getUserName(), request.getPassword());
-        if (user == null) {
+        Optional<User> user = userService.authenticate(request.getUserName(), request.getPassword());
+        if (user.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
         }
-        String token = jwtTokenUtils.generateToken(user);
-        return new ResponseEntity<>(new AuthResponse(user.getId(), user.getUserName(), user.getRoles(), token), HttpStatus.OK);
+        String token = jwtTokenUtils.generateToken(user.get());
+        return new ResponseEntity<>(new AuthResponse(user.get().getId(), user.get().getUserName(), user.get().getRoles(), token), HttpStatus.OK);
     }
 }
