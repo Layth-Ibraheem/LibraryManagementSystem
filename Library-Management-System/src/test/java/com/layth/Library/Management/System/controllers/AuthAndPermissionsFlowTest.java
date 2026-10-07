@@ -2,11 +2,14 @@ package com.layth.Library.Management.System.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.layth.Library.Management.System.utils.jwt.JwtRequestFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.ServletContextInitializerBeans;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -161,6 +165,19 @@ class AuthAndPermissionsFlowTest {
     void noDefaultUserStoreOrUnusedAuthenticationManagerIsRegistered() {
         assertEquals(0, context.getBeanNamesForType(UserDetailsService.class).length);
         assertEquals(0, context.getBeanNamesForType(AuthenticationManager.class).length);
+    }
+
+    @Test
+    void theJwtFilterRunsOnlyInsideTheSecurityChainNotAsASecondServletFilter() {
+        // The filters Spring Boot would register with the servlet container, as it computes them at startup.
+        var containerFilters = new ServletContextInitializerBeans(context).stream()
+                .filter(FilterRegistrationBean.class::isInstance)
+                .map(FilterRegistrationBean.class::cast)
+                .filter(FilterRegistrationBean::isEnabled)
+                .map(FilterRegistrationBean::getFilter)
+                .toList();
+
+        assertThat(containerFilters).isNotEmpty().noneMatch(JwtRequestFilter.class::isInstance);
     }
 
     @Test

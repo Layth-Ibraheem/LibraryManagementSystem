@@ -231,8 +231,9 @@ The suite needs no database server; everything runs on in-memory H2. It has:
 - **Layers.** Controllers handle HTTP, request validation and the mapping to response DTOs
   (`requestsAndResponses`). Services hold the transactions and business rules. Spring Data JPA
   repositories do the data access. Controllers return DTOs, never JPA entities.
-- **JWT in the security chain.** `JwtRequestFilter` runs inside the Spring Security filter chain,
-  before `UsernamePasswordAuthenticationFilter`. It verifies the token's signature and expiry and
+- **JWT in the security chain.** `JwtRequestFilter` runs only inside the Spring Security filter
+  chain (its automatic servlet-container registration is disabled), before
+  `UsernamePasswordAuthenticationFilter`. It verifies the token's signature and expiry and
   puts a `CurrentUser` (id, user name, permissions) into the security context. A bad token does
   not throw from the filter: the request continues unauthenticated and the entry point answers
   `401`. The API is stateless (no session, no cookie), so CSRF protection is off.

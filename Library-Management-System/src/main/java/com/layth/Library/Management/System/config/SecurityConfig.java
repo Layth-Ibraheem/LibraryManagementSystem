@@ -2,6 +2,7 @@ package com.layth.Library.Management.System.config;
 
 import com.layth.Library.Management.System.utils.jwt.JwtRequestFilter;
 import jakarta.servlet.DispatcherType;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -52,6 +53,18 @@ public class SecurityConfig {
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * JwtRequestFilter is a bean so that it can be injected above, and Spring Boot registers every
+     * Filter bean with the servlet container as well. It belongs only in the security chain, so
+     * that second registration is turned off.
+     */
+    @Bean
+    public FilterRegistrationBean<JwtRequestFilter> jwtRequestFilterRegistration() {
+        FilterRegistrationBean<JwtRequestFilter> registration = new FilterRegistrationBean<>(jwtRequestFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
