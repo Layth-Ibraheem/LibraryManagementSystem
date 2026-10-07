@@ -1,50 +1,45 @@
 package com.layth.Library.Management.System.aspects.logging;
 
-import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+/**
+ * Logs every service call with its duration, and the exception type when it fails.
+ * <p>
+ * Arguments and return values are never logged: they include raw passwords (login and
+ * register) and entities with password hashes, and they would flood the log.
+ */
 @Aspect
 @Component
 public class LoggingAspect {
+    private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    // Log before a method is executed
-    @Before("execution(* com.layth.Library.Management.System.services.BookService(..))")
-    public void logBeforeMethod(JoinPoint joinPoint) {
-        log.info("Executing method: {}", joinPoint.getSignature());
+    /** Any method of any class in the services package or its subpackages. */
+    @Pointcut("execution(* com.layth.Library.Management.System.services..*(..))")
+    public void serviceMethods() {
     }
 
-    // Log after a method successfully returns
-    @AfterReturning(pointcut = "execution(* com.layth.Library.Management.System.services.BookService(..))", returning = "result")
-    public void logAfterMethod(JoinPoint joinPoint, Object result) {
-        log.info("Method {} executed successfully with return: {}", joinPoint.getSignature(), result);
+    @Around("serviceMethods()")
+    public Object logExecution(ProceedingJoinPoint joinPoint) throws Throwable {
+        String method = joinPoint.getSignature().toShortString();
+        long start = System.nanoTime();
+        try {
+            Object result = joinPoint.proceed();
+            log.debug("{} completed in {} ms", method, elapsedMillis(start));
+            return result;
+        } catch (Throwable ex) {
+            log.info("{} failed after {} ms with {}: {}", method, elapsedMillis(start),
+                    ex.getClass().getSimpleName(), ex.getMessage());
+            throw ex;
+        }
     }
 
-    // Log after a method throws an exception
-    @AfterThrowing(pointcut = "execution(* com.layth.Library.Management.System.services.BookService(..))", throwing = "exception")
-    public void logAfterThrowing(JoinPoint joinPoint, Throwable exception) {
-        log.error("Exception in method {}: {}", joinPoint.getSignature(), exception.getMessage());
-    }
-
-    // Log the execution time of a method using @Around
-    @Around("execution(* com.layth.Library.Management.System.services.BookService(..))")
-    public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
-        long start = System.currentTimeMillis();
-
-        Object proceed = joinPoint.proceed();  // Execute the method
-
-        long executionTime = System.currentTimeMillis() - start;
-        log.info("Method {} executed in {} ms", joinPoint.getSignature(), executionTime);
-
-        return proceed;
+    private static long elapsedMillis(long startNanos) {
+        return (System.nanoTime() - startNanos) / 1_000_000;
     }
 }
