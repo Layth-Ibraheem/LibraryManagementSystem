@@ -3,11 +3,13 @@ package com.layth.Library.Management.System.services;
 import com.layth.Library.Management.System.entities.Book;
 import com.layth.Library.Management.System.entities.User;
 import com.layth.Library.Management.System.repositories.BookRepository;
+import com.layth.Library.Management.System.repositories.BorrowingRepository;
 import com.layth.Library.Management.System.repositories.UserRepository;
 import com.layth.Library.Management.System.requestsAndResponses.books.AddNewBookRequest;
 import com.layth.Library.Management.System.requestsAndResponses.books.BookResponse;
 import com.layth.Library.Management.System.requestsAndResponses.books.UpdateBookRequest;
 import com.layth.Library.Management.System.utils.ISBNGenerator;
+import com.layth.Library.Management.System.utils.exceptions.ConflictException;
 import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -29,10 +31,12 @@ public class BookService {
     public static final String BOOKS_CACHE = "books";
 
     private final BookRepository bookRepository;
+    private final BorrowingRepository borrowingRepository;
     private final UserRepository userRepository;
 
-    public BookService(BookRepository bookRepository, UserRepository userRepository) {
+    public BookService(BookRepository bookRepository, BorrowingRepository borrowingRepository, UserRepository userRepository) {
         this.bookRepository = bookRepository;
+        this.borrowingRepository = borrowingRepository;
         this.userRepository = userRepository;
     }
 
@@ -60,10 +64,19 @@ public class BookService {
         return BookResponse.from(book);
     }
 
+    /**
+     * Deletes a book that has never been lent. A book with loans is kept, because deleting it would
+     * erase the loan history (409). The row lock stops a borrow from slipping in between the check and the delete.
+     */
     @CacheEvict(value = BOOKS_CACHE, key = "#bookId")
     @Transactional
     public void deleteBook(Integer bookId) {
-        bookRepository.delete(findBook(bookId));
+        Book book = bookRepository.findByIdForUpdate(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("There is no book with id " + bookId));
+        if (borrowingRepository.existsByBookId(bookId)) {
+            throw new ConflictException("Book " + bookId + " has loan history and cannot be deleted");
+        }
+        bookRepository.delete(book);
     }
 
     @Cacheable(value = BOOKS_CACHE, key = "#bookId")

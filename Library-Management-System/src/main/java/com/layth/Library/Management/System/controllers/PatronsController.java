@@ -71,8 +71,8 @@ public class PatronsController {
     @DeleteMapping("/{id}")
     @RequireRole(role = UserRoles.ManagePatrons)
     public ResponseEntity<?> deletePatron(@PathVariable(name = "id") Integer id) {
-        boolean isDeleted = patronService.deletePatron(id);
-        return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        patronService.deletePatron(id);
+        return ResponseEntity.noContent().build();
     }
 
     private static PatronResponse MapToPatronResponse(Patron patron) {

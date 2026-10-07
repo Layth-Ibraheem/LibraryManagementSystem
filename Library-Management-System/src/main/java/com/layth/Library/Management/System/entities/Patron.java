@@ -19,7 +19,8 @@ public class Patron {
     @Column(nullable = false,length = 20)
     private String phoneNumber;
 
-    @OneToMany(mappedBy = "patron", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // No cascade: loans are the library's history and must outlive any change to this side.
+    @OneToMany(mappedBy = "patron", fetch = FetchType.LAZY)
     private List<Borrowing> borrowings;
 
     public Patron() {

@@ -183,6 +183,33 @@ class LibraryApiFlowTest {
     }
 
     @Test
+    void booksAndPatronsWithLoanHistoryAreKept() throws Exception {
+        int bookId = createBook("Domain-Driven Design Distilled");
+        int patronId = createPatron("History Reader");
+        borrow(bookId, patronId).andExpect(status().isOk());
+        giveBack(bookId, patronId).andExpect(status().isOk());
+
+        mockMvc.perform(delete("/api/books/{id}", bookId).header("Authorization", adminToken))
+                .andExpect(status().isConflict());
+        mockMvc.perform(delete("/api/patrons/{id}", patronId).header("Authorization", adminToken))
+                .andExpect(status().isConflict());
+
+        getBook(bookId).andExpect(status().isOk());
+        mockMvc.perform(get("/api/patrons/{id}", patronId).header("Authorization", adminToken))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void aPatronWithoutLoansCanBeDeleted() throws Exception {
+        int patronId = createPatron("Short Visit");
+
+        mockMvc.perform(delete("/api/patrons/{id}", patronId).header("Authorization", adminToken))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/patrons/{id}", patronId).header("Authorization", adminToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void cacheUpdatesRunOutsideTheTransaction() {
         int cacheOrder = context.getBean(BeanFactoryCacheOperationSourceAdvisor.class).getOrder();
         int transactionOrder = context.getBean(BeanFactoryTransactionAttributeSourceAdvisor.class).getOrder();

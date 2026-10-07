@@ -18,7 +18,7 @@ public class User {
     private String password;
     @Column(nullable = false)
     private Integer roles;
-    @OneToMany(mappedBy = "addedByUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "addedByUser", fetch = FetchType.LAZY)
     private List<Book> books;
     public User() {
     }

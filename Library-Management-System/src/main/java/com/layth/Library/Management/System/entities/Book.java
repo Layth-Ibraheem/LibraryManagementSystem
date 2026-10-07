@@ -33,7 +33,8 @@ public class Book {
     @JoinColumn(name = "added_by_user_id", nullable = false)
     private User addedByUser;
 
-    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // No cascade: loans are the library's history and must outlive any change to this side.
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
     private List<Borrowing> borrowings;
     private boolean isBorrowed;
 
