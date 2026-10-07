@@ -3,7 +3,6 @@ package com.layth.Library.Management.System.entities;
 import jakarta.persistence.*;
 
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")

@@ -1,7 +1,6 @@
 package com.layth.Library.Management.System.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -103,10 +102,6 @@ public class Book {
 
     public User getAddedByUser() {
         return addedByUser;
-    }
-
-    private void setAddedByUserId(User addedByUser) {
-        this.addedByUser = addedByUser;
     }
 
     public List<Borrowing> getBorrowings() {
