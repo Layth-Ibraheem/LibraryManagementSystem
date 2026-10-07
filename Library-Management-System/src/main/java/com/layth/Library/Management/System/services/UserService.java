@@ -47,7 +47,7 @@ public class UserService {
      * Replaces the user's permission set; the caller has already validated the value.
      */
     @Transactional
-    public User updateRoles(Integer userId, int roles) throws ResourceNotFoundException {
+    public User updateRoles(Integer userId, int roles) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("There is no user with id " + userId));
         user.setRoles(roles);

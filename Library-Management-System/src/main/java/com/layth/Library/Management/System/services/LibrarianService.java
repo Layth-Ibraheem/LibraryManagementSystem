@@ -26,7 +26,7 @@ public class LibrarianService {
         Librarian librarian = new Librarian(null,request.getFirstName(),request.getLastName());
         return librarianRepository.save(librarian);
     }
-    public Librarian updateLibrarian(Integer id, UpdateLibrarianRequest request) throws ResourceNotFoundException {
+    public Librarian updateLibrarian(Integer id, UpdateLibrarianRequest request) {
         Optional<Librarian> optionalLibrarian = librarianRepository.findById(id);
         if(optionalLibrarian.isPresent()){
             Librarian librarian = optionalLibrarian.get();

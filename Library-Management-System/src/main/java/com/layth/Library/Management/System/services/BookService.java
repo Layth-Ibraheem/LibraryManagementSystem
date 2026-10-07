@@ -35,7 +35,7 @@ public class BookService {
     }
 
     @CachePut(value = "books", key = "#bookId")
-    public Book updateBook(Integer bookId, UpdateBookRequest request) throws ResourceNotFoundException {
+    public Book updateBook(Integer bookId, UpdateBookRequest request) {
         Optional<Book> optionalBook = bookRepository.findById(bookId);
         if (optionalBook.isPresent()) {
             optionalBook.get().setTitle(request.getTitle());

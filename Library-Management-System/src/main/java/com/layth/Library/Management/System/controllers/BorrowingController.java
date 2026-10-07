@@ -4,7 +4,6 @@ import com.layth.Library.Management.System.entities.Borrowing;
 import com.layth.Library.Management.System.entities.UserRoles;
 import com.layth.Library.Management.System.services.BorrowingService;
 import com.layth.Library.Management.System.utils.annotations.RequireRole;
-import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +19,7 @@ public class BorrowingController {
 
     @PostMapping("/borrow/{bookId}/patron/{patronId}")
     @RequireRole(role = UserRoles.ManagePatrons)
-    public ResponseEntity<?> borrowBook(@PathVariable(name = "bookId") Integer bookId, @PathVariable(name = "patronId") Integer patronId) throws ResourceNotFoundException {
+    public ResponseEntity<?> borrowBook(@PathVariable(name = "bookId") Integer bookId, @PathVariable(name = "patronId") Integer patronId) {
         Borrowing borrowing = borrowingService.borrowBook(patronId, bookId);
         if (borrowing == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("this patron has already borrowed this book");

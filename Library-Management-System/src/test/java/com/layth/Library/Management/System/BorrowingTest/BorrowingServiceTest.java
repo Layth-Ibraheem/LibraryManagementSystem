@@ -7,7 +7,6 @@ import com.layth.Library.Management.System.repositories.BookRepository;
 import com.layth.Library.Management.System.repositories.BorrowingRepository;
 import com.layth.Library.Management.System.repositories.PatronsRepository;
 import com.layth.Library.Management.System.services.BorrowingService;
-import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -35,7 +34,7 @@ public class BorrowingServiceTest {
     private BorrowingService borrowingService;
 
     @Test
-    public void testBorrowBook() throws ResourceNotFoundException {
+    public void testBorrowBook() {
         // Arrange
         Integer patronId = 1;
         Integer bookId = 1;

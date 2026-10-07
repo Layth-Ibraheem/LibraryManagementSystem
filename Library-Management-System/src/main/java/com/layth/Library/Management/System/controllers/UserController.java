@@ -5,7 +5,6 @@ import com.layth.Library.Management.System.requestsAndResponses.users.UpdateUser
 import com.layth.Library.Management.System.requestsAndResponses.users.UserResponse;
 import com.layth.Library.Management.System.services.UserService;
 import com.layth.Library.Management.System.utils.annotations.RequireRole;
-import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +30,7 @@ public class UserController {
     @PutMapping("/{id}/roles")
     @RequireRole(role = UserRoles.AllRoles)
     public ResponseEntity<UserResponse> updateRoles(@PathVariable(name = "id") Integer id,
-                                                    @Valid @RequestBody UpdateUserRolesRequest request) throws ResourceNotFoundException {
+                                                    @Valid @RequestBody UpdateUserRolesRequest request) {
         return ResponseEntity.ok(UserResponse.from(userService.updateRoles(id, request.roles())));
     }
 }

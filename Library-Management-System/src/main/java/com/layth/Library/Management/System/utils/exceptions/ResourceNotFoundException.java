@@ -1,22 +1,13 @@
 package com.layth.Library.Management.System.utils.exceptions;
 
-public class ResourceNotFoundException extends Exception {
-    public ResourceNotFoundException() {
-    }
-
+/**
+ * Thrown when a requested entity does not exist. Mapped to 404 Not Found.
+ * <p>
+ * It is unchecked on purpose: callers cannot recover from it, and a checked exception
+ * would not roll back a surrounding {@code @Transactional} method by default.
+ */
+public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {
         super(message);
-    }
-
-    public ResourceNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ResourceNotFoundException(Throwable cause) {
-        super(cause);
-    }
-
-    public ResourceNotFoundException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

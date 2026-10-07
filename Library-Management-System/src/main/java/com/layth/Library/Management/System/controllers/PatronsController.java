@@ -7,7 +7,6 @@ import com.layth.Library.Management.System.requestsAndResponses.patrons.PatronRe
 import com.layth.Library.Management.System.requestsAndResponses.patrons.UpdatePatronRequest;
 import com.layth.Library.Management.System.services.PatronService;
 import com.layth.Library.Management.System.utils.annotations.RequireRole;
-import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,7 +59,7 @@ public class PatronsController {
 
     @PutMapping("/{id}")
     @RequireRole(role = UserRoles.ManagePatrons)
-    public ResponseEntity<?> updatePatron(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdatePatronRequest request) throws ResourceNotFoundException {
+    public ResponseEntity<?> updatePatron(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdatePatronRequest request) {
         Patron updatedPatron = patronService.updatePatron(id, request);
         if (updatedPatron != null) {
             return new ResponseEntity<>(MapToPatronResponse(updatedPatron), HttpStatus.OK);

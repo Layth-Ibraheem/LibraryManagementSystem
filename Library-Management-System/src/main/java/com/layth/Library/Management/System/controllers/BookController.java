@@ -8,7 +8,6 @@ import com.layth.Library.Management.System.requestsAndResponses.books.BookRespon
 import com.layth.Library.Management.System.requestsAndResponses.books.UpdateBookRequest;
 import com.layth.Library.Management.System.services.BookService;
 import com.layth.Library.Management.System.utils.annotations.RequireRole;
-import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import com.layth.Library.Management.System.utils.jwt.CurrentUser;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -47,7 +46,7 @@ public class BookController {
 
     @PutMapping("/{id}")
     @RequireRole(role = UserRoles.ManageBooks)
-    public ResponseEntity<?> updateBook(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdateBookRequest request) throws ResourceNotFoundException {
+    public ResponseEntity<?> updateBook(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdateBookRequest request) {
         Book updatedBook = bookService.updateBook(id,request);
         if (updatedBook != null) {
             return new ResponseEntity<>(MapToBookResponse(updatedBook), HttpStatus.OK);

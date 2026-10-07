@@ -7,7 +7,6 @@ import com.layth.Library.Management.System.requestsAndResponses.librarians.Libra
 import com.layth.Library.Management.System.requestsAndResponses.librarians.UpdateLibrarianRequest;
 import com.layth.Library.Management.System.services.LibrarianService;
 import com.layth.Library.Management.System.utils.annotations.RequireRole;
-import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -67,7 +66,7 @@ public class LibrarianController {
 
     @PutMapping("/{id}")
     @RequireRole(role = UserRoles.ManageLibrarians)
-    public ResponseEntity<?> updateLibrarian(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdateLibrarianRequest request) throws ResourceNotFoundException {
+    public ResponseEntity<?> updateLibrarian(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdateLibrarianRequest request) {
         Librarian updatedLibrarian = librarianService.updateLibrarian(id, request);
         if (updatedLibrarian != null) {
             return new ResponseEntity<>(MapToLibrarianResponse(updatedLibrarian), HttpStatus.OK);

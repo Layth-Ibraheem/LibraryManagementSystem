@@ -29,7 +29,7 @@ public class PatronService {
         Patron patron = new Patron(null,request.getName(),request.getEmail(),request.getPhoneNumber());
         return patronsRepository.save(patron);
     }
-    public Patron updatePatron(Integer id, UpdatePatronRequest request) throws ResourceNotFoundException {
+    public Patron updatePatron(Integer id, UpdatePatronRequest request) {
         Optional<Patron> optionalPatron = patronsRepository.findById(id);
         if(optionalPatron.isPresent()){
             optionalPatron.get().setName(request.getName());

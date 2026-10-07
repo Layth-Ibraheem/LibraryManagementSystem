@@ -26,7 +26,7 @@ public class BorrowingService {
     }
 
     @Transactional
-    public Borrowing borrowBook(Integer patronId,Integer bookId) throws ResourceNotFoundException {
+    public Borrowing borrowBook(Integer patronId,Integer bookId) {
         Optional<Borrowing> optionalBorrowing = borrowingRepository.findActiveBorrowingByPatronIdAndBookId(patronId,bookId);
         if(optionalBorrowing.isPresent()){
             return null;

@@ -90,7 +90,7 @@ class UserServiceTest {
     }
 
     @Test
-    void updateRolesReplacesThePermissionSet() throws ResourceNotFoundException {
+    void updateRolesReplacesThePermissionSet() {
         User bob = new User(2, "bob", "hash", UserRoles.NO_PERMISSIONS);
         when(userRepository.findById(2)).thenReturn(Optional.of(bob));
 
