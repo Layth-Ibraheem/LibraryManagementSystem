@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -216,23 +215,23 @@ class LibraryApiFlowTest {
                 .andExpect(jsonPath("$.isbn").value("9780441172719"));
 
         addBook("9780441172719").andExpect(status().isConflict());
-        addBook("978-0-441-17271-8").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
-        addBook("978O441172719").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
-        addBook("0-441-17271-7").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
-        addBook("").andExpect(status().isBadRequest()).andExpect(jsonPath("$.isbn").exists());
+        addBook("978-0-441-17271-8").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.isbn").exists());
+        addBook("978O441172719").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.isbn").exists());
+        addBook("0-441-17271-7").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.isbn").exists());
+        addBook("").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.isbn").exists());
     }
 
     @Test
     void unknownIdsAreNotFoundWithAMessageNamingTheRightResource() throws Exception {
         mockMvc.perform(get("/api/books/{id}", 999_999).header("Authorization", adminToken))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("There is no book with id 999999"));
+                .andExpect(jsonPath("$.detail").value("There is no book with id 999999"));
         mockMvc.perform(get("/api/librarians/{id}", 999_999).header("Authorization", adminToken))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("There is no librarian with id 999999"));
+                .andExpect(jsonPath("$.detail").value("There is no librarian with id 999999"));
         mockMvc.perform(get("/api/patrons/{id}", 999_999).header("Authorization", adminToken))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("There is no patron with id 999999"));
+                .andExpect(jsonPath("$.detail").value("There is no patron with id 999999"));
         mockMvc.perform(put("/api/librarians/{id}", 999_999)
                         .header("Authorization", adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -265,7 +264,7 @@ class LibraryApiFlowTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\": \"Emma\", \"author\": \"Jane Austen\", \"isbn\": \"%s\"}".formatted(nextIsbn())))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.publicationYear").exists());
+                .andExpect(jsonPath("$.errors.publicationYear").exists());
     }
 
     @Test

@@ -102,7 +102,7 @@ class AuthAndPermissionsFlowTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"roles\": 8}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.roles").exists());
+                .andExpect(jsonPath("$.errors.roles").exists());
     }
 
     @Test
@@ -181,8 +181,8 @@ class AuthAndPermissionsFlowTest {
     void registrationRejectsInvalidAndDuplicateRequests() throws Exception {
         register("x", "short", "")
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.userName").exists())
-                .andExpect(jsonPath("$.password").exists());
+                .andExpect(jsonPath("$.errors.userName").exists())
+                .andExpect(jsonPath("$.errors.password").exists());
 
         register("carol", "carol-password-1", "").andExpect(status().isCreated());
         register("carol", "carol-password-2", "").andExpect(status().isConflict());
