@@ -2,16 +2,25 @@ package com.layth.Library.Management.System.requestsAndResponses.patrons;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Same rules as {@link AddNewPatronRequest}.
+ */
 public class UpdatePatronRequest {
     @NotBlank
-    @Size(min = 4,max = 50)
+    @Size(min = 2, max = 100)
     private String name;
-    @Email
+
     @NotBlank
+    @Email
+    @Size(max = 255)
     private String email;
-    @Size(min = 9,max = 15)
+
+    @NotBlank
+    @Size(min = 7, max = 20)
+    @Pattern(regexp = "\\+?[0-9][0-9 -]*", message = "must contain only digits, spaces or hyphens, optionally starting with +")
     private String phoneNumber;
 
     public UpdatePatronRequest(String name, String email, String phoneNumber) {

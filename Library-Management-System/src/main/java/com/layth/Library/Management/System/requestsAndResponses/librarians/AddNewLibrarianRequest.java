@@ -1,15 +1,18 @@
 package com.layth.Library.Management.System.requestsAndResponses.librarians;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Limits match the Librarian table: each name is 50 characters at most.
+ */
 public class AddNewLibrarianRequest {
-    @Size(min = 4,max = 25)
     @NotBlank(message = "First name is required")
+    @Size(min = 2, max = 50)
     private String firstName;
-    @Size(min = 4,max = 25)
+
     @NotBlank(message = "Last name is required")
+    @Size(min = 2, max = 50)
     private String lastName;
 
     public AddNewLibrarianRequest() {
@@ -35,5 +38,4 @@ public class AddNewLibrarianRequest {
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
-
 }

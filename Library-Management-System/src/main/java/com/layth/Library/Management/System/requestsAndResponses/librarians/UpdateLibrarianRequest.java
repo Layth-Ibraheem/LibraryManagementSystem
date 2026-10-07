@@ -3,14 +3,17 @@ package com.layth.Library.Management.System.requestsAndResponses.librarians;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Same rules as {@link AddNewLibrarianRequest}.
+ */
 public class UpdateLibrarianRequest {
-    @Size(min = 4,max = 25)
     @NotBlank(message = "First name is required")
+    @Size(min = 2, max = 50)
     private String firstName;
-    @Size(min = 4,max = 25)
-    @NotBlank(message = "Last name is required")
-    private String lastName;
 
+    @NotBlank(message = "Last name is required")
+    @Size(min = 2, max = 50)
+    private String lastName;
 
     public UpdateLibrarianRequest() {
     }
@@ -35,5 +38,4 @@ public class UpdateLibrarianRequest {
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
-
 }

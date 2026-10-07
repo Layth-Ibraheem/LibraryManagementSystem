@@ -222,6 +222,16 @@ class LibraryApiFlowTest {
     }
 
     @Test
+    void aBookWithoutAPublicationYearIsABadRequest() throws Exception {
+        mockMvc.perform(post("/api/books")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\": \"Emma\", \"author\": \"Jane Austen\", \"isbn\": \"%s\"}".formatted(nextIsbn())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.publicationYear").exists());
+    }
+
+    @Test
     void cacheUpdatesRunOutsideTheTransaction() {
         int cacheOrder = context.getBean(BeanFactoryCacheOperationSourceAdvisor.class).getOrder();
         int transactionOrder = context.getBean(BeanFactoryTransactionAttributeSourceAdvisor.class).getOrder();
@@ -253,7 +263,7 @@ class LibraryApiFlowTest {
         return mockMvc.perform(post("/api/books")
                 .header("Authorization", adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"title\": \"Dune: Deluxe Edition\", \"author\": \"Frank Herbert\", \"publicationYear\": 1965, \"isbn\": \"%s\"}"
+                .content("{\"title\": \"Dune\", \"author\": \"Frank Herbert\", \"publicationYear\": 1965, \"isbn\": \"%s\"}"
                         .formatted(isbn)));
     }
 

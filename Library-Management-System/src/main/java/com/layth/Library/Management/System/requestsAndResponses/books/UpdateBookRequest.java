@@ -1,19 +1,26 @@
 package com.layth.Library.Management.System.requestsAndResponses.books;
 
+import com.layth.Library.Management.System.utils.validation.NotFutureYear;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.io.Serializable;
-
-public class UpdateBookRequest implements Serializable {
-    @Size(min = 10, max = 255)
+/**
+ * Same rules as {@link AddNewBookRequest}. The ISBN identifies the book and cannot be changed.
+ */
+public class UpdateBookRequest {
     @NotBlank(message = "Title is required")
+    @Size(min = 1, max = 200)
     private String title;
-    @Size(min = 4, max = 50)
+
     @NotBlank(message = "Author is required")
+    @Size(min = 2, max = 200)
     private String author;
+
+    @NotNull(message = "Publication year is required")
     @Min(1450)
+    @NotFutureYear
     private Integer publicationYear;
 
     public UpdateBookRequest() {
@@ -48,5 +55,4 @@ public class UpdateBookRequest implements Serializable {
     public void setPublicationYear(Integer publicationYear) {
         this.publicationYear = publicationYear;
     }
-
 }
