@@ -108,6 +108,38 @@ class AuthAndPermissionsFlowTest {
     }
 
     @Test
+    void borrowingAndReturningRequireManagePatrons() throws Exception {
+        String adminToken = bearer(body(login("admin", adminPassword).andExpect(status().isOk())));
+        String clerkToken = bearer(body(login("clerk", clerkPassword).andExpect(status().isOk())));
+        String daveToken = bearer(body(register("dave", "dave-password-1", "").andExpect(status().isCreated())));
+
+        int bookId = body(mockMvc.perform(post("/api/books")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\": \"Domain-Driven Design\", \"author\": \"Eric Evans\", \"publicationYear\": 2003}"))
+                .andExpect(status().isCreated())).get("id").asInt();
+        int patronId = body(mockMvc.perform(post("/api/patrons")
+                        .header("Authorization", clerkToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\": \"Patron One\", \"email\": \"patron.one@example.com\", \"phoneNumber\": \"0991234567\"}"))
+                .andExpect(status().isCreated())).get("id").asInt();
+
+        mockMvc.perform(post("/api/borrow/{bookId}/patron/{patronId}", bookId, patronId)
+                        .header("Authorization", daveToken))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/borrow/{bookId}/patron/{patronId}", bookId, patronId)
+                        .header("Authorization", clerkToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/return/{bookId}/patron/{patronId}", bookId, patronId)
+                        .header("Authorization", daveToken))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(put("/api/return/{bookId}/patron/{patronId}", bookId, patronId)
+                        .header("Authorization", clerkToken))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void loginRejectsWrongPassword() throws Exception {
         login("admin", "not-the-password").andExpect(status().isUnauthorized());
     }
