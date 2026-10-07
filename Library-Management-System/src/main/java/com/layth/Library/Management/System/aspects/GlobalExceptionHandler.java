@@ -1,6 +1,7 @@
 package com.layth.Library.Management.System.aspects;
 
 import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
+import com.layth.Library.Management.System.utils.exceptions.UserNameAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,6 +29,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<?> handleNotFoundException(Exception ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(UserNameAlreadyExistsException.class)
+    public ResponseEntity<?> handleUserNameAlreadyExistsException(UserNameAlreadyExistsException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
     }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGenericException(Exception ex) {

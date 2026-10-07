@@ -3,6 +3,7 @@ package com.layth.Library.Management.System.services;
 import com.layth.Library.Management.System.entities.User;
 import com.layth.Library.Management.System.repositories.UserRepository;
 import com.layth.Library.Management.System.requestsAndResponses.auth.RegisterRequest;
+import com.layth.Library.Management.System.utils.exceptions.UserNameAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,6 +50,17 @@ class UserServiceTest {
         assertNotEquals("correct-horse", storedPassword);
         assertTrue(storedPassword.startsWith("$2"), "expected a BCrypt hash");
         assertTrue(passwordEncoder.matches("correct-horse", storedPassword));
+    }
+
+    @Test
+    void registerRejectsTakenUserName() {
+        RegisterRequest request = new RegisterRequest();
+        request.setUserName("alice");
+        request.setPassword("correct-horse");
+        when(userRepository.existsByUserName("alice")).thenReturn(true);
+
+        assertThrows(UserNameAlreadyExistsException.class, () -> userService.register(request));
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test

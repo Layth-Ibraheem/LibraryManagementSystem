@@ -6,11 +6,13 @@ import com.layth.Library.Management.System.requestsAndResponses.auth.LoginReques
 import com.layth.Library.Management.System.requestsAndResponses.auth.RegisterRequest;
 import com.layth.Library.Management.System.services.UserService;
 import com.layth.Library.Management.System.utils.jwt.JwtTokenUtils;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,24 +26,20 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
-            User user = userService.register(request);
-            String token = jwtTokenUtils.generateToken(user);
-            return new ResponseEntity<>(new AuthResponse(user.getId(), user.getUserName(), user.getRoles(), token), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.FAILED_DEPENDENCY);
-//            return ResponseEntity.f().body("Error: " + e.getMessage());
-        }
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        User user = userService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toAuthResponse(user));
     }
 
-    @GetMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        Optional<User> user = userService.authenticate(request.getUserName(), request.getPassword());
-        if (user.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
-        }
-        String token = jwtTokenUtils.generateToken(user.get());
-        return new ResponseEntity<>(new AuthResponse(user.get().getId(), user.get().getUserName(), user.get().getRoles(), token), HttpStatus.OK);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        return userService.authenticate(request.getUserName(), request.getPassword())
+                .<ResponseEntity<?>>map(user -> ResponseEntity.ok(toAuthResponse(user)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user name or password"));
+    }
+
+    private AuthResponse toAuthResponse(User user) {
+        String token = jwtTokenUtils.generateToken(user);
+        return new AuthResponse(user.getId(), user.getUserName(), user.getRoles(), token);
     }
 }

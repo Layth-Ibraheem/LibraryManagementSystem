@@ -3,6 +3,7 @@ package com.layth.Library.Management.System.services;
 import com.layth.Library.Management.System.entities.User;
 import com.layth.Library.Management.System.repositories.UserRepository;
 import com.layth.Library.Management.System.requestsAndResponses.auth.RegisterRequest;
+import com.layth.Library.Management.System.utils.exceptions.UserNameAlreadyExistsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,9 @@ public class UserService {
     }
 
     public User register(RegisterRequest request) {
+        if (userRepository.existsByUserName(request.getUserName())) {
+            throw new UserNameAlreadyExistsException(request.getUserName());
+        }
         String passwordHash = passwordEncoder.encode(request.getPassword());
         User user = new User(null, request.getUserName(), passwordHash, request.getRoles());
         return userRepository.save(user);
