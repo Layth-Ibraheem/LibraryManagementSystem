@@ -6,7 +6,11 @@ import com.layth.Library.Management.System.entities.UserRoles;
 import com.layth.Library.Management.System.utils.jwt.JwtTokenUtils;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,7 +20,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -98,6 +106,20 @@ class AuthenticationErrorsTest {
         String forged = new JwtTokenUtils(new JwtProperties(otherKey, Duration.ofHours(1))).generateToken(admin);
 
         rejected(mockMvc.perform(get("/api/books").header(HttpHeaders.AUTHORIZATION, "Bearer " + forged)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"id", "username", "roles"})
+    void aCorrectlySignedTokenWithoutARequiredClaimIsUnauthorized(String missingClaim) throws Exception {
+        Map<String, Object> claims = new HashMap<>(Map.of("id", 1, "username", "admin", "roles", -1));
+        claims.remove(missingClaim);
+        String token = Jwts.builder()
+                .setClaims(claims)
+                .setExpiration(new Date(System.currentTimeMillis() + Duration.ofHours(1).toMillis()))
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                .compact();
+
+        rejected(mockMvc.perform(get("/api/books").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)));
     }
 
     @Test
