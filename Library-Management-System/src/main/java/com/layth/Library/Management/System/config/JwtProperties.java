@@ -12,7 +12,8 @@ import java.time.Duration;
  * JWT settings bound from {@code jwt.*} (for example the JWT_SECRET environment variable).
  * Validation runs at startup, so a missing or too-short key stops the application immediately.
  *
- * @param secret     HMAC-SHA256 signing key; at least 32 characters (256 bits)
+ * @param secret     HMAC signing key; at least 32 characters (256 bits). JJWT picks HS256, HS384
+ *                   or HS512 from the key length (the dev key of the h2 profile gives HS384)
  * @param expiration how long an issued token stays valid, for example {@code 10h}
  */
 @Validated
