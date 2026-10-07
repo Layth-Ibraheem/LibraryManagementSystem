@@ -1,8 +1,10 @@
 package com.layth.Library.Management.System.services;
 
 import com.layth.Library.Management.System.entities.User;
+import com.layth.Library.Management.System.entities.UserRoles;
 import com.layth.Library.Management.System.repositories.UserRepository;
 import com.layth.Library.Management.System.requestsAndResponses.auth.RegisterRequest;
+import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import com.layth.Library.Management.System.utils.exceptions.UserNameAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +52,7 @@ class UserServiceTest {
         assertNotEquals("correct-horse", storedPassword);
         assertTrue(storedPassword.startsWith("$2"), "expected a BCrypt hash");
         assertTrue(passwordEncoder.matches("correct-horse", storedPassword));
+        assertEquals(UserRoles.NO_PERMISSIONS, saved.getValue().getRoles());
     }
 
     @Test
@@ -84,5 +87,22 @@ class UserServiceTest {
         when(userRepository.findByUserName("nobody")).thenReturn(Optional.empty());
 
         assertTrue(userService.authenticate("nobody", "whatever").isEmpty());
+    }
+
+    @Test
+    void updateRolesReplacesThePermissionSet() throws ResourceNotFoundException {
+        User bob = new User(2, "bob", "hash", UserRoles.NO_PERMISSIONS);
+        when(userRepository.findById(2)).thenReturn(Optional.of(bob));
+
+        User updated = userService.updateRoles(2, UserRoles.ManageBooks.getRole() | UserRoles.ManagePatrons.getRole());
+
+        assertEquals(6, updated.getRoles());
+    }
+
+    @Test
+    void updateRolesOfUnknownUserThrowsNotFound() {
+        when(userRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.updateRoles(99, 1));
     }
 }

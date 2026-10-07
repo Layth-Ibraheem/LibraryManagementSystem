@@ -4,6 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Self-registration. There is deliberately no roles field: new users get no permissions,
+ * and only an administrator can grant them (PUT /api/users/{id}/roles).
+ */
 public class RegisterRequest {
     @NotBlank(message = "User name is required")
     @Size(min = 3, max = 50)
@@ -14,15 +18,13 @@ public class RegisterRequest {
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 72)
     private String password;
-    private Integer roles;
 
     public RegisterRequest() {
     }
 
-    public RegisterRequest(String userName, String password, Integer roles) {
+    public RegisterRequest(String userName, String password) {
         this.userName = userName;
         this.password = password;
-        this.roles = roles;
     }
 
     public String getUserName() {
@@ -39,13 +41,5 @@ public class RegisterRequest {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public Integer getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Integer roles) {
-        this.roles = roles;
     }
 }
