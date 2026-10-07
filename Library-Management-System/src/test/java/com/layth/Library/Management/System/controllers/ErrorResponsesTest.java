@@ -107,6 +107,18 @@ class ErrorResponsesTest {
     }
 
     @Test
+    void aFailedLoginIsAnUnauthorizedProblemThatDoesNotSayWhichPartWasWrong() throws Exception {
+        problem(mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"userName\": \"admin\", \"password\": \"not-the-password\"}")), 401)
+                .andExpect(jsonPath("$.detail").value("Invalid user name or password"));
+        problem(mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"userName\": \"nobody-here\", \"password\": \"not-the-password\"}")), 401)
+                .andExpect(jsonPath("$.detail").value("Invalid user name or password"));
+    }
+
+    @Test
     void aTakenUserNameIsAConflictProblem() throws Exception {
         register("errors-frank").andExpect(status().isCreated());
 

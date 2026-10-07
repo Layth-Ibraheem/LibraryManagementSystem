@@ -1,6 +1,7 @@
 package com.layth.Library.Management.System.aspects;
 
 import com.layth.Library.Management.System.utils.exceptions.ConflictException;
+import com.layth.Library.Management.System.utils.exceptions.InvalidCredentialsException;
 import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -72,6 +73,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ProblemDetail handleConflict(ConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /** A failed login. Missing or invalid tokens are answered by the security entry point instead. */
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     /**

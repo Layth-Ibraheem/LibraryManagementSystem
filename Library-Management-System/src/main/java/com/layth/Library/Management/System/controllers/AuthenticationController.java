@@ -5,6 +5,7 @@ import com.layth.Library.Management.System.requestsAndResponses.auth.AuthRespons
 import com.layth.Library.Management.System.requestsAndResponses.auth.LoginRequest;
 import com.layth.Library.Management.System.requestsAndResponses.auth.RegisterRequest;
 import com.layth.Library.Management.System.services.UserService;
+import com.layth.Library.Management.System.utils.exceptions.InvalidCredentialsException;
 import com.layth.Library.Management.System.utils.jwt.JwtTokenUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -32,10 +33,10 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        return userService.authenticate(request.getUserName(), request.getPassword())
-                .<ResponseEntity<?>>map(user -> ResponseEntity.ok(toAuthResponse(user)))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user name or password"));
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        User user = userService.authenticate(request.getUserName(), request.getPassword())
+                .orElseThrow(InvalidCredentialsException::new);
+        return ResponseEntity.ok(toAuthResponse(user));
     }
 
     private AuthResponse toAuthResponse(User user) {
