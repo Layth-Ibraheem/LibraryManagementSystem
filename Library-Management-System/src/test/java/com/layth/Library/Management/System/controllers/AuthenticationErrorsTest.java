@@ -4,6 +4,8 @@ import com.layth.Library.Management.System.config.JwtProperties;
 import com.layth.Library.Management.System.entities.User;
 import com.layth.Library.Management.System.entities.UserRoles;
 import com.layth.Library.Management.System.utils.jwt.JwtTokenUtils;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.RequestDispatcher;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,6 +57,22 @@ class AuthenticationErrorsTest {
     @Test
     void anUnknownUrlWithoutATokenIsUnauthorizedRatherThanNotFound() throws Exception {
         unauthorized(mockMvc.perform(get("/api/no-such-endpoint")), MISSING);
+    }
+
+    @Test
+    void theErrorPageIsNotOpenToDirectRequests() throws Exception {
+        unauthorized(mockMvc.perform(get("/error")), MISSING);
+    }
+
+    @Test
+    void aForwardedServletErrorKeepsItsStatus() throws Exception {
+        mockMvc.perform(get("/error").with(request -> {
+                    request.setDispatcherType(DispatcherType.ERROR);
+                    request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, 400);
+                    request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, "/api/books;x=1");
+                    return request;
+                }))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

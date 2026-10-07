@@ -1,6 +1,7 @@
 package com.layth.Library.Management.System.config;
 
 import com.layth.Library.Management.System.utils.jwt.JwtRequestFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -38,9 +39,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                        // Spring Boot's error page: when a servlet error is forwarded here, its real
-                        // status must reach the client instead of being masked by a 401.
-                        .requestMatchers("/error").permitAll()
+                        // Servlet errors forwarded to Spring Boot's /error page (for example a 400 from the
+                        // request firewall) keep their real status instead of being masked by a 401.
+                        // Only the internal ERROR dispatch is open; a client calling /error directly is not.
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .anyRequest().authenticated()
                 )
                 // 401 for a missing or rejected token, 403 for a URL-level denial; both as problem details.
