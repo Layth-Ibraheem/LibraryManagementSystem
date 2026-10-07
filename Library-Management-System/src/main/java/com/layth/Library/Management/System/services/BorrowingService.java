@@ -7,6 +7,7 @@ import com.layth.Library.Management.System.entities.Patron;
 import com.layth.Library.Management.System.repositories.BookRepository;
 import com.layth.Library.Management.System.repositories.BorrowingRepository;
 import com.layth.Library.Management.System.repositories.PatronsRepository;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class BorrowingService {
         this.patronsRepository = patronsRepository;
     }
 
+    @CacheEvict(value = BookService.BOOKS_CACHE, key = "#bookId")
     @Transactional
     public Borrowing borrowBook(Integer patronId,Integer bookId) {
         Optional<Borrowing> optionalBorrowing = borrowingRepository.findActiveBorrowingByPatronIdAndBookId(patronId,bookId);
@@ -50,6 +52,7 @@ public class BorrowingService {
         bookRepository.save(book);
         return borrowingRepository.save(borrowing);
     }
+    @CacheEvict(value = BookService.BOOKS_CACHE, key = "#bookId")
     @Transactional
     public boolean returnBook(Integer bookId, Integer patronId){
         Optional<Borrowing> optionalBorrowing = borrowingRepository.findActiveBorrowingByPatronIdAndBookId(patronId,bookId);
