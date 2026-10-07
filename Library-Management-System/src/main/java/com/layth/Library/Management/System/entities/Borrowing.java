@@ -11,10 +11,10 @@ public class Borrowing {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patron_id",nullable = false)
     private Patron patron;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id",nullable = false)
     private Book book;
     @Column(nullable = false)

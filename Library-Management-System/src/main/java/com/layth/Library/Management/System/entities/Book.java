@@ -27,7 +27,9 @@ public class Book {
     @Column(nullable = false)
 
     private LocalDate creationDate;
-    @ManyToOne
+    // LAZY: listing books must not load every creator. getAddedByUser().getId() reads the id
+    // from the proxy without a query.
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "added_by_user_id", nullable = false)
     private User addedByUser;
 
