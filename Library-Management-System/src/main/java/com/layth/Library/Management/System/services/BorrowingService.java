@@ -7,7 +7,6 @@ import com.layth.Library.Management.System.entities.Patron;
 import com.layth.Library.Management.System.repositories.BookRepository;
 import com.layth.Library.Management.System.repositories.BorrowingRepository;
 import com.layth.Library.Management.System.repositories.PatronsRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,26 +14,29 @@ import java.time.LocalDate;
 import java.util.Optional;
 @Service
 public class BorrowingService {
-    @Autowired
-    private BorrowingRepository _repo;
-    @Autowired
-    private BookRepository _bookRepo;
+    private final BorrowingRepository borrowingRepository;
+    private final BookRepository bookRepository;
+    private final PatronsRepository patronsRepository;
 
-    @Autowired
-    PatronsRepository _patronRepo;
+    public BorrowingService(BorrowingRepository borrowingRepository, BookRepository bookRepository,
+                            PatronsRepository patronsRepository) {
+        this.borrowingRepository = borrowingRepository;
+        this.bookRepository = bookRepository;
+        this.patronsRepository = patronsRepository;
+    }
 
     @Transactional
     public Borrowing borrowBook(Integer patronId,Integer bookId) throws ResourceNotFoundException {
-        Optional<Borrowing> optionalBorrowing = _repo.findActiveBorrowingByPatronIdAndBookId(patronId,bookId);
+        Optional<Borrowing> optionalBorrowing = borrowingRepository.findActiveBorrowingByPatronIdAndBookId(patronId,bookId);
         if(optionalBorrowing.isPresent()){
             return null;
         }
 
-        Optional<Patron> optionalPatron = _patronRepo.findById(patronId);
+        Optional<Patron> optionalPatron = patronsRepository.findById(patronId);
         if(optionalPatron.isEmpty()){
             throw new ResourceNotFoundException("There is no patron with such id");
         }
-        Optional<Book> optionalBook = _bookRepo.findById(bookId);
+        Optional<Book> optionalBook = bookRepository.findById(bookId);
         if(optionalBook.isEmpty()){
             throw new ResourceNotFoundException("There is no book with such id");
         }
@@ -45,17 +47,17 @@ public class BorrowingService {
 
         book.setBorrowed(true);
         Borrowing borrowing = new Borrowing(null,patron,book, LocalDate.now());
-        _bookRepo.save(book);
-        return _repo.save(borrowing);
+        bookRepository.save(book);
+        return borrowingRepository.save(borrowing);
     }
     @Transactional
     public boolean returnBook(Integer bookId, Integer patronId){
-        Optional<Borrowing> optionalBorrowing = _repo.findActiveBorrowingByPatronIdAndBookId(patronId,bookId);
+        Optional<Borrowing> optionalBorrowing = borrowingRepository.findActiveBorrowingByPatronIdAndBookId(patronId,bookId);
         if(optionalBorrowing.isPresent()){
             Borrowing borrowing = optionalBorrowing.get();
             borrowing.getBook().setBorrowed(false);
             borrowing.setReturnedDate(LocalDate.now());
-            _repo.save(borrowing);
+            borrowingRepository.save(borrowing);
             return true;
         }
         return false;

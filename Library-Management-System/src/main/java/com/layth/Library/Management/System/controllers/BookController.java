@@ -7,12 +7,10 @@ import com.layth.Library.Management.System.requestsAndResponses.books.AddNewBook
 import com.layth.Library.Management.System.requestsAndResponses.books.BookResponse;
 import com.layth.Library.Management.System.requestsAndResponses.books.UpdateBookRequest;
 import com.layth.Library.Management.System.services.BookService;
-import com.layth.Library.Management.System.services.LibrarianService;
 import com.layth.Library.Management.System.utils.annotations.RequireRole;
 import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundException;
 import com.layth.Library.Management.System.utils.jwt.CurrentUser;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,11 +22,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
-    @Autowired
-    private LibrarianService _librarianService;
+    private final BookService bookService;
 
-    @Autowired
-    private BookService _bookService;
+    public BookController(BookService bookService) {
+        this.bookService = bookService;
+    }
 
     @PostMapping
     @RequireRole(role = UserRoles.ManageBooks)
@@ -37,7 +35,7 @@ public class BookController {
 
         User addedByUser = new User(currentUser.getId(), currentUser.getUserName(), "", currentUser.getRoles());
 
-        Book addedBook = _bookService.addNewBook(request, addedByUser);
+        Book addedBook = bookService.addNewBook(request, addedByUser);
         if (addedBook.getId() == null) {
             return new ResponseEntity<>("Error happened, could not add the book", HttpStatus.FAILED_DEPENDENCY);
         } else {
@@ -50,7 +48,7 @@ public class BookController {
     @PutMapping("/{id}")
     @RequireRole(role = UserRoles.ManageBooks)
     public ResponseEntity<?> updateBook(@PathVariable(name = "id") Integer id, @Valid @RequestBody UpdateBookRequest request) throws ResourceNotFoundException {
-        Book updatedBook = _bookService.updateBook(id,request);
+        Book updatedBook = bookService.updateBook(id,request);
         if (updatedBook != null) {
             return new ResponseEntity<>(MapToBookResponse(updatedBook), HttpStatus.OK);
         } else {
@@ -61,7 +59,7 @@ public class BookController {
     @GetMapping("/{id}")
     @RequireRole(role = UserRoles.ManageBooks)
     public ResponseEntity<?> getBookById(@PathVariable(name = "id") Integer id) {
-        Book book = _bookService.getBookById(id);
+        Book book = bookService.getBookById(id);
         if (book != null) {
             return new ResponseEntity<>(MapToBookResponse(book), HttpStatus.OK);
         } else {
@@ -73,7 +71,7 @@ public class BookController {
     @GetMapping
     @RequireRole(role = UserRoles.ManageBooks)
     public ResponseEntity<?> getAllBooks() {
-        List<Book> books = _bookService.getAllBooks();
+        List<Book> books = bookService.getAllBooks();
         List<BookResponse> booksResponse = new ArrayList<>();
         for (Book book : books) {
             booksResponse.add(MapToBookResponse(book));
@@ -84,7 +82,7 @@ public class BookController {
     @DeleteMapping("/{id}")
     @RequireRole(role = UserRoles.ManageBooks)
     public ResponseEntity<?> deleteBook(@PathVariable(name = "id") Integer id) {
-        boolean isDeleted = _bookService.deleteBook(id);
+        boolean isDeleted = bookService.deleteBook(id);
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
