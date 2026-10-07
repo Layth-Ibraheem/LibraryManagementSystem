@@ -5,6 +5,7 @@ import com.layth.Library.Management.System.utils.exceptions.ResourceNotFoundExce
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -71,6 +72,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ProblemDetail handleConflict(ConflictException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /**
+     * A database constraint rejected the write. The services check uniqueness and loan history
+     * first, so this only happens when two requests race (two books with the same ISBN, or a loan
+     * created while its patron is being deleted). Request validation mirrors the NOT NULL and
+     * length rules of the columns, so a bad input is answered with 400 before it gets here.
+     * The database message names tables and constraints, so it is logged, not returned.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Constraint violation for {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMostSpecificCause().getMessage());
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "The request conflicts with data that already exists");
     }
 
     /** Thrown by RoleCheckAspect when the caller's token lacks the permission an endpoint requires. */

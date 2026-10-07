@@ -1,6 +1,7 @@
 package com.layth.Library.Management.System.aspects;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ProblemDetail;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -17,5 +18,15 @@ class GlobalExceptionHandlerTest {
 
         assertThat(problem.getStatus()).isEqualTo(500);
         assertThat(problem.getDetail()).isEqualTo("An unexpected error occurred");
+    }
+
+    @Test
+    void aConstraintViolationIsA409WithoutTheDatabaseMessage() {
+        ProblemDetail problem = handler.handleDataIntegrityViolation(
+                new DataIntegrityViolationException("Unique index or primary key violation: UK_BOOKS_ISBN ON PUBLIC.BOOKS(ISBN)"),
+                new MockHttpServletRequest("POST", "/api/books"));
+
+        assertThat(problem.getStatus()).isEqualTo(409);
+        assertThat(problem.getDetail()).isEqualTo("The request conflicts with data that already exists");
     }
 }
