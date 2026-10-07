@@ -152,6 +152,37 @@ class LibraryApiFlowTest {
     }
 
     @Test
+    void aBookOnLoanCannotBeLentToASecondPatronUntilItIsReturned() throws Exception {
+        int bookId = createBook("Designing Data-Intensive Applications");
+        int firstPatron = createPatron("First Reader");
+        int secondPatron = createPatron("Second Reader");
+
+        borrow(bookId, firstPatron).andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookId").value(bookId))
+                .andExpect(jsonPath("$.patronId").value(firstPatron))
+                .andExpect(jsonPath("$.returnedDate").doesNotExist());
+        borrow(bookId, secondPatron).andExpect(status().isConflict());
+        giveBack(bookId, secondPatron).andExpect(status().isConflict());
+
+        giveBack(bookId, firstPatron).andExpect(status().isOk())
+                .andExpect(jsonPath("$.returnedDate").exists());
+        giveBack(bookId, firstPatron).andExpect(status().isConflict());
+
+        borrow(bookId, secondPatron).andExpect(status().isOk());
+        giveBack(bookId, secondPatron).andExpect(status().isOk());
+    }
+
+    @Test
+    void borrowingAnUnknownBookOrPatronIsNotFound() throws Exception {
+        int bookId = createBook("Release It! Second Edition");
+        int patronId = createPatron("Known Reader");
+
+        borrow(999_999, patronId).andExpect(status().isNotFound());
+        borrow(bookId, 999_999).andExpect(status().isNotFound());
+        giveBack(bookId, 999_999).andExpect(status().isNotFound());
+    }
+
+    @Test
     void cacheUpdatesRunOutsideTheTransaction() {
         int cacheOrder = context.getBean(BeanFactoryCacheOperationSourceAdvisor.class).getOrder();
         int transactionOrder = context.getBean(BeanFactoryTransactionAttributeSourceAdvisor.class).getOrder();
@@ -175,6 +206,16 @@ class LibraryApiFlowTest {
                         .content("{\"name\": \"%s\", \"email\": \"reader%d@example.com\", \"phoneNumber\": \"0991234567\"}"
                                 .formatted(name, SEQUENCE.incrementAndGet())))
                 .andExpect(status().isCreated())).get("id").asInt();
+    }
+
+    private ResultActions borrow(int bookId, int patronId) throws Exception {
+        return mockMvc.perform(post("/api/borrow/{bookId}/patron/{patronId}", bookId, patronId)
+                .header("Authorization", adminToken));
+    }
+
+    private ResultActions giveBack(int bookId, int patronId) throws Exception {
+        return mockMvc.perform(put("/api/return/{bookId}/patron/{patronId}", bookId, patronId)
+                .header("Authorization", adminToken));
     }
 
     private ResultActions getBook(int bookId) throws Exception {
